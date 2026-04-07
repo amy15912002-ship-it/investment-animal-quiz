@@ -80,31 +80,93 @@
        封面頁
     ════════════════════════════════ */
     #page-cover {
-      position: relative;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #1B4A0A;
+      /* display 由 .page / .page.active 控制，不在此覆寫 */
     }
-    .cover-img-wrap {
-      position: relative;
-      z-index: 5;
-      flex: 1;
-      display: flex;
+    #page-cover.active {
       flex-direction: column;
     }
-    .cover-img-wrap img.cover-bg {
-      width: 100%;
-      height: 100%;
+    /* 圖片面板 */
+    .cover-img-panel {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .cover-bg-img {
+      width: 100%; height: 100%;
       object-fit: cover;
-      object-position: center;
+      object-position: center 30%;
       display: block;
     }
-    /* CTA 疊加在封面圖上 */
-    .cover-cta-overlay {
+    /* 預設：手機圖顯示、桌機圖隱藏 */
+    .cover-bg-desktop { display: none; }
+    .cover-grad {
       position: absolute;
-      bottom: 0; left: 0; right: 0;
+      left: 0; right: 0;
+      pointer-events: none;
+    }
+    .cover-grad-top {
+      top: 0; height: 340px;
+      background: linear-gradient(to bottom,
+        rgba(8,22,4,0.82) 0%,
+        rgba(8,22,4,0.55) 55%,
+        transparent 100%);
+    }
+    .cover-grad-bottom {
+      bottom: 0; height: 120px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(14,40,4,0.82) 60%, rgba(14,40,4,0.96) 100%);
+    }
+    /* 內容面板：手機版疊加在圖片上 */
+    .cover-content-panel {
+      position: absolute;
+      inset: 0;
       z-index: 10;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      padding: 0 24px 36px;
+      padding: 52px 32px 28px;
+    }
+    .cover-top-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: rgba(0,0,0,0.22);
+      border-radius: 20px;
+      padding: 16px 20px 12px;
+      backdrop-filter: blur(2px);
+    }
+    .cover-logo {
+      height: 56px;
+      object-fit: contain;
+      margin-bottom: 20px;
+    }
+    .cover-title {
+      color: #FFF8E8;
+      font-family: 'Noto Serif TC', serif;
+      font-size: 40px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.5;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+    }
+    .cover-subtitle {
+      color: rgba(255,248,220,0.82);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    .cover-btn-group {
+      width: 100%;
+      display: flex;
+      justify-content: center;
     }
     .cover-start-btn {
       width: 100%;
@@ -653,6 +715,115 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .fade-up { animation: fadeUp 0.35s ease both; }
+
+    /* ════════════════════════════════
+       桌機 RWD（≥ 768px）
+    ════════════════════════════════ */
+    @media (min-width: 768px) {
+      /* App 容器加寬 */
+      .app { max-width: 780px; }
+
+      /* ── 封面：左圖右面板 ── */
+      #page-cover { flex-direction: row !important; }
+      .cover-img-panel {
+        position: relative;
+        inset: auto;
+        width: 58%;
+        height: 100%;
+        flex-shrink: 0;
+      }
+      /* 桌機：切換為橫式封面圖 */
+      .cover-bg-mobile { display: none; }
+      .cover-bg-desktop { display: block; object-position: left center; }
+      .cover-grad-top, .cover-grad-bottom { display: none; }
+      .cover-content-panel {
+        position: relative;
+        inset: auto;
+        width: 42%;
+        justify-content: center;
+        gap: 32px;
+        padding: 52px 44px;
+        background: rgba(8, 22, 4, 0.94);
+        backdrop-filter: blur(10px);
+      }
+      .cover-title {
+        color: #FFF8E8;
+        font-size: 34px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      }
+      .cover-subtitle {
+        color: rgba(255,248,220,0.72);
+        font-size: 14px;
+      }
+      .cover-btn-group { width: 100%; }
+      .cover-start-btn { max-width: 100%; font-size: 18px; }
+      /* 桌機右欄已是深色背景，不需要額外半透明底 */
+      .cover-top-group {
+        background: none;
+        backdrop-filter: none;
+        padding: 0;
+        border-radius: 0;
+      }
+
+      /* ── 頁首葉片：桌機隱藏（固定在視窗邊緣會跑版） ── */
+      svg.deco-tl, svg.deco-tr { display: none !important; }
+
+      /* ── 題目頁：加寬 + 選項 2x2 格 ── */
+      .question-card { padding: 20px 24px; }
+      .question-text-display { font-size: 16px; }
+      .option-text-label { font-size: 14px; }
+      .options-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .option-card { padding: 14px 16px; align-items: flex-start; }
+
+      /* ── 計算頁：稍大 ── */
+      .calc-aniu { width: 160px; height: 160px; }
+      .calc-title { font-size: 22px; }
+
+      /* ── 結果頁：上方 Hero 突出 + 下方內容 2 欄格 ── */
+      #page-result { overflow-y: auto; }
+
+      /* Hero 區：更寬敞、動物更大 */
+      .result-hero {
+        padding: 56px 32px 40px;
+      }
+      /* 動物圖（img 直接子元素）放大 */
+      .result-hero > img {
+        width: 220px !important;
+        height: 220px !important;
+      }
+      /* 動物圓框版本放大 */
+      .result-animal-circle {
+        width: 200px !important;
+        height: 200px !important;
+      }
+      .result-name { font-size: 36px; }
+      .result-quote-box { max-width: 520px; padding: 14px 28px; }
+      .result-quote-text { font-size: 15px; }
+
+      /* 內容區：2 欄格 */
+      .result-content {
+        padding: 36px 32px 60px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+      /* 以下佔整列（只有 power-card + style-card 並排） */
+      .desc-card,
+      .sub-card,
+      .tags-section,
+      .section-label,
+      .product-main,
+      .compat-row,
+      .action-btn-primary,
+      .action-btn-secondary {
+        grid-column: 1 / -1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -676,40 +847,24 @@
   </svg>
 
   <!-- ════════════════ 封面頁 ════════════════ -->
-  <div id="page-cover" class="page active"
-       style="position:fixed;inset:0;z-index:200;background:#1B4A0A;flex-direction:column;">
-    <!-- 全屏背景圖，不受 430px 限制 -->
-    <div style="position:absolute;inset:0;overflow:hidden;">
-      <img src="assets/cover.png" alt="揭曉！你是哪隻阿牛？"
-           style="width:100%;height:100%;object-fit:cover;object-position:center 30%;">
+  <div id="page-cover" class="page active">
+    <!-- 圖片面板（手機：全螢幕；桌機：左側 58%） -->
+    <div class="cover-img-panel">
+      <img src="assets/手機cover.png" alt="揭曉！你是哪隻阿牛？" class="cover-bg-img cover-bg-mobile">
+      <img src="assets/桌機cover.png" alt="揭曉！你是哪隻阿牛？" class="cover-bg-img cover-bg-desktop">
+      <div class="cover-grad cover-grad-top"></div>
+      <div class="cover-grad cover-grad-bottom"></div>
     </div>
-    <!-- 頂部遮罩（讓 logo 清晰可見） -->
-    <div style="position:absolute;top:0;left:0;right:0;height:110px;
-                background:linear-gradient(to bottom,rgba(12,34,6,0.62) 0%,transparent 100%);
-                pointer-events:none;"></div>
-    <!-- 底部漸層遮罩（僅最底部，不蓋到動物） -->
-    <div style="position:absolute;bottom:0;left:0;right:0;height:120px;
-                background:linear-gradient(to bottom,transparent 0%,rgba(14,40,4,0.82) 60%,rgba(14,40,4,0.96) 100%);
-                pointer-events:none;"></div>
-    <!-- Logo + 標題（上方） -->
-    <div style="position:absolute;top:52px;left:0;right:0;display:flex;flex-direction:column;align-items:center;z-index:10;padding:0 32px;">
-      <img src="assets/logo.png" alt="鉅亨買基金"
-           style="height:56px;object-fit:contain;margin-bottom:20px;">
-      <h1 style="color:#2B1A00;font-family:'Noto Serif TC',serif;font-size:40px;font-weight:900;
-                 text-align:center;line-height:1.5;letter-spacing:4px;margin-bottom:8px;
-                 text-shadow:0 1px 4px rgba(255,255,255,0.5);">
-        發現你的投資阿牛原型
-      </h1>
-      <p style="color:rgba(50,30,0,0.7);font-size:20px;letter-spacing:1px;text-align:center;">
-        10 道生活題 · 約 1.5 分鐘 · 純娛樂性質
-      </p>
-    </div>
-    <!-- 按鈕區（下方） -->
-    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 32px 120px;
-                display:flex;flex-direction:column;align-items:center;z-index:10;">
-      <button class="cover-start-btn" onclick="startQuiz()" style="max-width:300px;width:100%;">
-        開啟你的投資探險 →
-      </button>
+    <!-- 內容面板（手機：疊加在圖上；桌機：右側 42% 深色欄） -->
+    <div class="cover-content-panel">
+      <div class="cover-top-group">
+        <img src="assets/logo.png" alt="鉅亨買基金" class="cover-logo">
+        <h1 class="cover-title">發現你的<br>投資阿牛原型</h1>
+        <p class="cover-subtitle">10 道生活題 · 約 1.5 分鐘 · 純娛樂性質</p>
+      </div>
+      <div class="cover-btn-group">
+        <button class="cover-start-btn" onclick="startQuiz()">開啟你的投資探險 →</button>
+      </div>
     </div>
   </div>
 
@@ -1057,7 +1212,7 @@ function renderQuestion() {
         <span class="question-emoji-display">${q.emoji}</span>
         <p class="question-text-display">${q.q}</p>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+      <div class="options-grid" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
         ${q.options.map((opt, i) => `
           <div class="option-card ${answers[currentQ] === i ? 'selected' : ''}"
                onclick="selectOption(${i})">
@@ -1143,23 +1298,27 @@ function buildResult(p, s) {
   const subCircleHtml = renderSubCircle(s);
 
   return `
-    <!-- Hero 背景區 -->
-    <div style="position:relative;background:linear-gradient(180deg,#FEF5E4 0%,#C8E8F5 18%,#A8D8A8 36%,#5A9E3A 54%,#2F6B1A 72%,#1A4A0A 100%);padding-bottom:40px;">
-      <div style="position:absolute;top:15px;left:50%;transform:translateX(-50%);width:240px;height:240px;background:radial-gradient(circle,rgba(255,220,100,0.28) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
+  <div class="result-layout">
+    <!-- Hero 欄（桌機 sticky 左側；手機正常流） -->
+    <div class="result-hero-col">
+      <div style="position:relative;background:linear-gradient(180deg,#FEF5E4 0%,#C8E8F5 18%,#A8D8A8 36%,#5A9E3A 54%,#2F6B1A 72%,#1A4A0A 100%);padding-bottom:40px;">
+        <div style="position:absolute;top:15px;left:50%;transform:translateX(-50%);width:240px;height:240px;background:radial-gradient(circle,rgba(255,220,100,0.28) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
 
-      <div class="result-hero" style="padding-top:32px;">
-        ${heroAnimal}
-        <div class="result-series" style="color:${p.color};">${p.series}</div>
-        <div class="result-name">你是 ${p.name}！</div>
-        <div class="result-quote-box" style="border-color:rgba(255,248,220,0.5);">
-          <p class="result-quote-text">「${p.quote}」</p>
+        <div class="result-hero" style="padding-top:32px;">
+          ${heroAnimal}
+          <div class="result-name">你是 ${p.name}！</div>
+          <div class="result-quote-box" style="border-color:rgba(255,248,220,0.5);">
+            <p class="result-quote-text">「${p.quote}」</p>
+          </div>
         </div>
-      </div>
 
-      <!-- 草地裝飾 -->
-      <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(180deg,transparent 0%,#2A6B14 40%,#1E5210 80%,#3D2008 100%);border-radius:60% 60% 0 0/20% 20% 0 0;"></div>
+        <!-- 草地裝飾 -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(180deg,transparent 0%,#2A6B14 40%,#1E5210 80%,#3D2008 100%);border-radius:60% 60% 0 0/20% 20% 0 0;"></div>
+      </div>
     </div>
 
+    <!-- 內容欄（桌機右側捲動；手機正常流） -->
+    <div class="result-content-col">
     <!-- 白色內容區 -->
     <div class="result-content">
 
@@ -1240,7 +1399,9 @@ function buildResult(p, s) {
       <button class="action-btn-primary" onclick="startQuiz()">再探索一次 →</button>
       <button class="action-btn-secondary" onclick="shareResult('${p.name}', '${p.quote.replace(/'/g,"&#39;")}')">分享我的結果</button>
 
-    </div>
+    </div><!-- end result-content -->
+    </div><!-- end result-content-col -->
+  </div><!-- end result-layout -->
   `;
 }
 

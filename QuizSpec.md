@@ -2,7 +2,7 @@
 
 > **版本**：v3.0（雙維度計分 + 新動物 + 四大產品整合版）
 > **最後更新**：2026-04-02
-> **對應實作**：`quiz/investment-animal-quiz.html`
+> **對應實作**：`investment-animal-quiz/index.html`
 > **參照文件**：`products/DipAdd/DipAdd.md`、`products/FreePay/FreePay.md`、`products/SuperKing/SuperKing.md`、`products/TreasureBox/TreasureBox.md`
 
 ---
@@ -37,11 +37,12 @@
 
 ### 2.1 封面頁
 
-- 顯示測驗標題「揭曉！你是哪隻阿牛？」
-- 副標「阿牛今天想嘗試不同的投資風格——哪套動物裝最適合你？」
-- 動物裝預覽：展示部分動物剪影（製造好奇心）
-- CTA 按鈕「開始測驗」
-- 底部提示「10 道生活題 · 約 1.5 分鐘 · 純娛樂性質」
+- 顯示測驗標題「發現你的投資阿牛原型」
+- 副標「10 道生活題 · 約 1.5 分鐘 · 純娛樂性質」
+- 全版封面插圖（6 隻動物裝阿牛）：手機版直式、桌機版橫式各一張
+- Logo（鉅亨買基金）置頂顯示
+- CTA 按鈕「開啟你的投資探險 →」
+- **RWD 佈局**：手機版全螢幕圖片＋文字疊加；桌機版左圖右深色面板
 
 ### 2.2 題目頁
 
@@ -68,7 +69,7 @@
 由上至下依序為：
 
 1. **主動物頭像**（阿牛穿動物裝插圖 + 彩色圓底）
-2. **動物名稱 + 系列名**
+2. **動物名稱**
 3. **語錄引言**（虛線框）
 4. **性格描述**（約 50 字）
 5. **投資超能力**卡片（品牌主色底）
@@ -517,7 +518,7 @@ State: CALCULATING
 State: RESULT
   ├─ 計算雙維度座標 → 取最近動物（主）
   ├─ 渲染結果頁（主動物 + 主推產品）
-  ├─ 觸發 confetti 動畫（浣熊牛：稀有特效加強版）
+  ├─ 觸發 confetti 動畫
   ├─ [點擊「再玩一次」] → COVER → 自動進入 QUESTION(0)
   └─ [點擊分享按鈕] → 開啟對應社群平台分享
 ```
@@ -529,10 +530,10 @@ State: RESULT
 | 項目 | 規格 |
 |------|------|
 | 技術棧 | 純 HTML + Tailwind CSS (CDN) + Vanilla JS |
-| 字型 | Fredoka（標題）+ Nunito（內文）+ Noto Sans TC（中文） |
+| 字型 | Noto Serif TC（標題）+ Noto Sans TC（內文） |
 | UI 風格 | Claymorphism（柔軟圓潤、inner/outer shadow、3px border） |
 | 品牌色 | 主色 `#F04D29`、次色 `#FAA634`、三色 `#3EC2CF`（遵循 DesignSystem.md） |
-| 響應式 | 手機優先，內容區 max-width 448px |
+| 響應式 | 手機優先；手機 max-width 430px、桌機（≥ 768px）max-width 780px |
 | 動畫 | 頁面轉場（fade + slide）、進度條漸變、confetti 撒花、loading 跳動 |
 | 無障礙 | 支援 `prefers-reduced-motion`，所有動畫在該設定下停用 |
 | 分享平台 | LINE、Facebook、X (Twitter)、複製連結 |
