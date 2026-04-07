@@ -647,33 +647,6 @@
       box-shadow: 0 1px 0 #8B6230;
     }
 
-    /* Rare */
-    .rare-badge {
-      background: linear-gradient(135deg, #a855f7, #ec4899);
-      color: white;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 14px;
-      animation: glow 2s ease-in-out infinite alternate;
-      display: inline-block;
-      margin-bottom: 10px;
-    }
-    @keyframes glow {
-      from { box-shadow: 0 0 4px #a855f7; }
-      to   { box-shadow: 0 0 18px #a855f7, 0 0 36px #ec4899; }
-    }
-    .rare-ring { position: relative; display: inline-block; padding: 6px; }
-    .rare-ring::before {
-      content: '';
-      position: absolute; inset: 0;
-      border-radius: 50%;
-      background: conic-gradient(#a855f7, #ec4899, #f59e0b, #a855f7);
-      animation: spin 2s linear infinite;
-    }
-    .rare-inner { position: relative; z-index: 1; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     /* Fade in */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(14px); }
@@ -1010,7 +983,7 @@ const ANIMALS = [
     mainProductDesc: '你是投資世界的穩健派。定期定額讓你每個月自動存入，不需要擇時、不需要盯盤，用時間和紀律慢慢累積屬於你的資產。',
     mainProductTagline: '最簡單的投資方式，也是最不容易出錯的',
     compat: { best: ['elephant', '大象牛'], partner: ['bee', '蜜蜂牛'], pal: ['lion', '阿牛獅'] },
-    isRare: true,
+    isRare: false,
   },
 ];
 
@@ -1021,9 +994,7 @@ function getAnimalById(id) { return ANIMALS.find(a => a.id === id); }
 
 function renderAnimalCircle(a, size, extraStyle) {
   const s = size || 180;
-  const shadowFilter = a.isRare
-    ? `drop-shadow(0 0 22px ${a.color}) drop-shadow(0 10px 28px rgba(0,0,0,0.45))`
-    : `drop-shadow(0 10px 28px rgba(0,0,0,0.45))`;
+  const shadowFilter = `drop-shadow(0 10px 28px rgba(0,0,0,0.45))`;
   if (a.img) {
     return `<img src="${a.img}" alt="${a.name}" style="width:${s}px;height:${s}px;object-fit:contain;filter:${shadowFilter};margin-bottom:8px;${extraStyle||''}">`;
   }
@@ -1158,12 +1129,11 @@ function showResult() {
   document.getElementById('result-container').innerHTML = buildResult(p, s);
   showPage('result');
   document.getElementById('page-result').scrollTop = 0;
-  setTimeout(() => { p.isRare ? fireRareConfetti() : fireConfetti(); }, 500);
+  setTimeout(() => { fireConfetti(); }, 500);
 }
 
 function buildResult(p, s) {
   const mainCircle = renderAnimalCircle(p);
-  // rare 結果直接用 glow filter（已在 renderAnimalCircle 裡處理），不加圓框
   const heroAnimal = mainCircle;
 
   const powerIcon = p.powerImg
@@ -1177,9 +1147,7 @@ function buildResult(p, s) {
     <div style="position:relative;background:linear-gradient(180deg,#FEF5E4 0%,#C8E8F5 18%,#A8D8A8 36%,#5A9E3A 54%,#2F6B1A 72%,#1A4A0A 100%);padding-bottom:40px;">
       <div style="position:absolute;top:15px;left:50%;transform:translateX(-50%);width:240px;height:240px;background:radial-gradient(circle,rgba(255,220,100,0.28) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
 
-      ${p.isRare ? `<div style="text-align:center;padding-top:24px;"><span class="rare-badge">✨ 稀有結果！全球限定</span></div>` : ''}
-
-      <div class="result-hero" style="${p.isRare ? '' : 'padding-top:32px;'}">
+      <div class="result-hero" style="padding-top:32px;">
         ${heroAnimal}
         <div class="result-series" style="color:${p.color};">${p.series}</div>
         <div class="result-name">你是 ${p.name}！</div>
@@ -1292,13 +1260,6 @@ function shareResult(name, quote) {
 // ═══════════════════════════════════════════════════════
 function fireConfetti() {
   confetti({ particleCount: 140, spread: 80, origin: { y: 0.3 }, colors: ['#F0A500', '#FFD54F', '#87CEAB', '#F04D29', '#ffffff'] });
-}
-function fireRareConfetti() {
-  const end = Date.now() + 3000;
-  (function frame() {
-    confetti({ particleCount: 18, spread: 90, origin: { x: Math.random(), y: Math.random() * 0.5 }, colors: ['#a855f7','#ec4899','#f59e0b','#ffffff','#3EC2CF'], shapes: ['star'] });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
 }
 </script>
 </body>
