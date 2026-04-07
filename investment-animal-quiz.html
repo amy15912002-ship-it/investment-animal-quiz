@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>揭曉！你是哪隻阿牛？</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #1A4A1A;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Pages ── */
+    .page { display: none; flex-direction: column; min-height: 100vh; }
+    .page.active { display: flex; }
+
+    /* ── 共用背景 ── */
+    .jungle-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg,
+        #FEF5E4 0%,
+        #C8E8F5 18%,
+        #A8D8A8 36%,
+        #5A9E3A 54%,
+        #2F6B1A 72%,
+        #1A4A0A 100%
+      );
+      z-index: 0;
+    }
+    .jungle-ground {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 36%;
+      background: linear-gradient(180deg,
+        transparent 0%,
+        #2A6B14 20%,
+        #1E5210 60%,
+        #3D2008 100%
+      );
+      border-radius: 60% 60% 0 0 / 20% 20% 0 0;
+      z-index: 1;
+    }
+    .sun-glow {
+      position: absolute;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(255,220,100,0.28) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ── 葉片裝飾 ── */
+    .deco-tl { position: absolute; top: 0; left: -8px; width: 120px; z-index: 2; opacity: 0.92; }
+    .deco-tr { position: absolute; top: 0; right: -8px; width: 110px; z-index: 2; opacity: 0.88; transform: scaleX(-1); }
+    .deco-bl { position: absolute; bottom: 50px; left: -5px; width: 88px; z-index: 3; opacity: 0.9; }
+    .deco-br { position: absolute; bottom: 45px; right: -5px; width: 82px; z-index: 3; opacity: 0.9; transform: scaleX(-1); }
+
+    /* ════════════════════════════════
+       封面頁
+    ════════════════════════════════ */
+    #page-cover {
+      position: relative;
+    }
+    .cover-img-wrap {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .cover-img-wrap img.cover-bg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+    /* CTA 疊加在封面圖上 */
+    .cover-cta-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 24px 36px;
+    }
+    .cover-start-btn {
+      width: 100%;
+      max-width: 280px;
+      padding: 15px 24px;
+      background: linear-gradient(180deg, #C8870A 0%, #8B5E0A 100%);
+      border: 3px solid #5D3A06;
+      border-radius: 999px;
+      color: #FFF8E8;
+      font-size: 20px;
+      font-weight: 900;
+      font-family: 'Noto Serif TC', serif;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow:
+        0 4px 0 #4A2E04,
+        0 8px 24px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,230,120,0.4);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+    .cover-start-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #4A2E04, 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* ════════════════════════════════
+       題目頁
+    ════════════════════════════════ */
+    #page-question {
+      position: relative;
+    }
+
+    .top-bar {
+      position: relative;
+      z-index: 10;
+      padding: 16px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-prev {
+      background: rgba(255,255,255,0.88);
+      border: 2px solid #5D3A1A;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5D3A1A;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      min-width: 56px;
+    }
+    .progress-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .progress-track {
+      height: 10px;
+      background: rgba(255,255,255,0.28);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1.5px solid rgba(255,255,255,0.35);
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #F0A500, #FFD54F);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      box-shadow: 0 0 8px rgba(255,200,50,0.7);
+    }
+    .progress-label {
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+
+    /* 題目 + 選項容器 */
+    .question-section {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      padding: 4px 16px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 題目卡 */
+    .question-card {
+      background: linear-gradient(160deg, #FFFDF5 0%, #FFF5D8 100%);
+      border: 3px solid #7B4F1D;
+      border-radius: 20px;
+      padding: 16px 18px;
+      text-align: center;
+      box-shadow:
+        0 4px 0 #5D3A1A,
+        0 8px 20px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    .question-num-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #F0A500, #C87800);
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 14px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      border: 1.5px solid #7B4F1D;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      letter-spacing: 0.5px;
+    }
+    .question-emoji-display {
+      font-size: 34px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .question-text-display {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #3E1F00;
+      line-height: 1.65;
+      font-family: 'Noto Serif TC', serif;
+    }
+
+    /* 選項卡 */
+    .option-card {
+      background: linear-gradient(160deg, #FFFDF7 0%, #FFF8E8 100%);
+      border: 2.5px solid #8B6230;
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #6B4720, 0 5px 12px rgba(0,0,0,0.18);
+      transition: transform 0.1s, box-shadow 0.1s, background 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .option-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 #6B4720, 0 8px 18px rgba(0,0,0,0.22);
+      border-color: #F0A500;
+      background: linear-gradient(160deg, #FFFBEE 0%, #FFF3C0 100%);
+    }
+    .option-card.selected {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #6B4720, 0 2px 8px rgba(0,0,0,0.18);
+      background: linear-gradient(160deg, #FFF3C0 0%, #FFE47A 100%);
+      border-color: #C87800;
+    }
+    .option-icon-box {
+      font-size: 24px;
+      flex-shrink: 0;
+      width: 38px; height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.65);
+      border-radius: 10px;
+      border: 1.5px solid rgba(139,98,48,0.18);
+    }
+    .option-text-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3E1F00;
+      line-height: 1.5;
+      flex: 1;
+    }
+    .option-check {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F0A500, #C87800);
+      border: 2px solid #7B4F1D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.4);
+      transition: opacity 0.2s, transform 0.2s;
+      color: white;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .option-card.selected .option-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ════════════════════════════════
+       計算頁
+    ════════════════════════════════ */
+    #page-calculating {
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .calc-content {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 32px;
+    }
+    .calc-aniu {
+      width: 130px;
+      height: 130px;
+      object-fit: contain;
+      animation: bob 1.1s ease-in-out infinite;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 12px 20px rgba(0,0,0,0.35));
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .calc-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #FFF8E8;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.4);
+      margin-bottom: 8px;
+      font-family: 'Noto Serif TC', serif;
+    }
+    .calc-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,248,220,0.85);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+      margin-bottom: 32px;
+      min-height: 20px;
+    }
+    .calc-dots {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+    .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #F0A500;
+      animation: dotBounce 0.7s ease-in-out infinite;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; background: #FFD54F; }
+    .dot:nth-child(3) { animation-delay: 0.4s; background: #87CEAB; }
+    @keyframes dotBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* ════════════════════════════════
+       結果頁
+    ════════════════════════════════ */
+    #page-result {
+      position: relative;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .result-bg-strip {
+      position: sticky;
+      top: 0;
+      height: 260px;
+      flex-shrink: 0;
+    }
+    .result-jungle-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .result-jungle-bg .jungle-bg { position: absolute; inset: 0; }
+
+    /* 結果頁頂部 Hero */
+    .result-hero {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 24px;
+    }
+    .result-animal-circle {
+      width: 148px; height: 148px;
+      border-radius: 50%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      border: 4px solid #5D3A1A;
+      box-shadow:
+        0 0 0 3px rgba(255,255,255,0.5),
+        0 8px 0 #3D2508,
+        0 12px 30px rgba(0,0,0,0.5);
+      margin-bottom: 16px;
+    }
+    .result-animal-circle img {
+      width: 120%; height: 120%;
+      object-fit: contain;
+      object-position: center bottom;
+    }
+    .result-animal-circle-emoji {
+      font-size: 72px;
+      line-height: 1;
+      padding-bottom: 8px;
+    }
+    .result-series {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+      margin-bottom: 4px;
+    }
+    .result-name {
+      font-size: 26px;
+      font-weight: 900;
+      color: #FFF8E8;
+      font-family: 'Noto Serif TC', serif;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+      margin-bottom: 12px;
+    }
+    .result-quote-box {
+      background: rgba(255,248,220,0.18);
+      border: 2px solid rgba(255,248,220,0.45);
+      border-radius: 14px;
+      padding: 10px 18px;
+      backdrop-filter: blur(4px);
+    }
+    .result-quote-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFF8E8;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+      font-style: italic;
+    }
+
+    /* 結果頁白色內容區 */
+    .result-content {
+      position: relative;
+      z-index: 10;
+      background: white;
+      border-radius: 28px 28px 0 0;
+      margin-top: -24px;
+      padding: 28px 18px 40px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    }
+
+    /* 描述卡 */
+    .desc-card {
+      background: linear-gradient(160deg, #FFFDF5, #FFF8E8);
+      border: 2.5px solid #C8A060;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 0 #C8A060, 0 5px 12px rgba(0,0,0,0.08);
+    }
+    .desc-text {
+      font-size: 13.5px;
+      color: #3E1F00;
+      line-height: 1.75;
+    }
+
+    /* 超能力卡 */
+    .power-card {
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+      border: 3px solid #5D3A1A;
+      box-shadow: 0 4px 0 #3D2508, 0 6px 16px rgba(0,0,0,0.15);
+    }
+    .power-icon-img {
+      width: 58px; height: 58px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+    }
+    .power-icon-emoji { font-size: 42px; flex-shrink: 0; }
+    .power-label { font-size: 10px; font-weight: 700; opacity: 0.8; margin-bottom: 3px; color: white; }
+    .power-name { font-size: 15px; font-weight: 900; color: white; margin-bottom: 4px; font-family: 'Noto Serif TC', serif; }
+    .power-desc { font-size: 11.5px; color: white; opacity: 0.85; line-height: 1.5; }
+
+    /* 投資方式卡 */
+    .style-card {
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      border: 2px solid;
+    }
+    .style-icon { font-size: 28px; flex-shrink: 0; }
+    .style-label { font-size: 10px; font-weight: 700; opacity: 0.75; margin-bottom: 2px; }
+    .style-name { font-size: 14px; font-weight: 900; font-family: 'Noto Serif TC', serif; }
+    .style-sub { font-size: 11px; opacity: 0.65; margin-top: 1px; }
+
+    /* 副屬性卡 */
+    .sub-card {
+      background: #F9F9F9;
+      border: 2px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .sub-animal-circle {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      border: 2.5px solid;
+      flex-shrink: 0;
+    }
+    .sub-animal-circle img {
+      width: 125%; height: 125%;
+      object-fit: contain;
+      object-position: center bottom;
+    }
+    .sub-animal-emoji { font-size: 28px; }
+
+    /* 標籤 */
+    .tags-section { margin-bottom: 14px; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9CA3AF;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .tag-pill {
+      display: inline-block;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 13px;
+      border: 2px solid;
+      margin: 3px 3px 3px 0;
+    }
+
+    /* 主推產品 */
+    .product-main {
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 10px;
+      border: 2.5px solid;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+    }
+    .product-tag {
+      display: inline-block;
+      border-radius: 8px;
+      padding: 3px 12px;
+      font-size: 13px;
+      font-weight: 900;
+      color: white;
+      margin-bottom: 8px;
+    }
+    .product-anue-label { font-size: 11px; color: #9CA3AF; margin-left: 8px; }
+    .product-desc { font-size: 13px; color: #4B3000; line-height: 1.65; margin-bottom: 8px; }
+    .product-tagline { font-size: 12px; font-weight: 700; }
+
+    /* 相性 */
+    .compat-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .compat-card {
+      flex: 1;
+      background: #F9F9F9;
+      border: 2px solid #E5E7EB;
+      border-radius: 14px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .compat-circle {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0 auto 5px;
+      border: 2px solid;
+    }
+    .compat-circle img {
+      width: 125%; height: 125%;
+      object-fit: contain;
+      object-position: center bottom;
+    }
+    .compat-emoji { font-size: 24px; }
+
+    /* 操作按鈕 */
+    .action-btn-primary {
+      width: 100%;
+      padding: 15px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #C8870A 0%, #8B5E0A 100%);
+      border: 3px solid #5D3A06;
+      color: #FFF8E8;
+      font-size: 16px;
+      font-weight: 900;
+      font-family: 'Noto Serif TC', serif;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #4A2E04, 0 6px 16px rgba(0,0,0,0.3);
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+    .action-btn-primary:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #4A2E04;
+    }
+    .action-btn-secondary {
+      width: 100%;
+      padding: 13px;
+      border-radius: 999px;
+      background: white;
+      border: 2.5px solid #8B6230;
+      color: #5D3A1A;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #8B6230;
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+    .action-btn-secondary:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #8B6230;
+    }
+
+    /* Rare */
+    .rare-badge {
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      color: white;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 14px;
+      animation: glow 2s ease-in-out infinite alternate;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    @keyframes glow {
+      from { box-shadow: 0 0 4px #a855f7; }
+      to   { box-shadow: 0 0 18px #a855f7, 0 0 36px #ec4899; }
+    }
+    .rare-ring { position: relative; display: inline-block; padding: 6px; }
+    .rare-ring::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(#a855f7, #ec4899, #f59e0b, #a855f7);
+      animation: spin 2s linear infinite;
+    }
+    .rare-inner { position: relative; z-index: 1; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Fade in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.35s ease both; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ════════ SVG 葉片（共用） ════════ -->
+  <svg class="deco-tl" viewBox="0 0 120 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:fixed;top:0;left:-8px;width:120px;z-index:20;pointer-events:none;">
+    <path d="M10 190 C10 190 -20 85 40 32 C70 10 105 2 112 7 C112 7 80 44 70 84 C60 124 52 165 10 190Z" fill="#1B6B1A" opacity="0.9"/>
+    <path d="M15 180 C15 180 -12 88 38 42 C62 24 90 14 108 18" stroke="#145214" stroke-width="2" fill="none" opacity="0.5"/>
+    <ellipse cx="76" cy="56" rx="13" ry="7" fill="#27A827" opacity="0.8" transform="rotate(-30 76 56)"/>
+    <ellipse cx="50" cy="96" rx="11" ry="6" fill="#1E8B1E" opacity="0.7" transform="rotate(20 50 96)"/>
+    <path d="M28 8 C28 8 4 52 18 94" stroke="#1B6B1A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="18" cy="52" rx="14" ry="8" fill="#2D9B1F" opacity="0.85" transform="rotate(-45 18 52)"/>
+  </svg>
+  <svg class="deco-tr" viewBox="0 0 120 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:fixed;top:0;right:-8px;width:110px;z-index:20;pointer-events:none;transform:scaleX(-1);">
+    <path d="M10 190 C10 190 -20 85 40 32 C70 10 105 2 112 7 C112 7 80 44 70 84 C60 124 52 165 10 190Z" fill="#1B6B1A" opacity="0.88"/>
+    <path d="M15 180 C15 180 -12 88 38 42 C62 24 90 14 108 18" stroke="#145214" stroke-width="2" fill="none" opacity="0.45"/>
+    <ellipse cx="76" cy="56" rx="13" ry="7" fill="#27A827" opacity="0.78" transform="rotate(-30 76 56)"/>
+    <path d="M28 8 C28 8 4 52 18 94" stroke="#1B6B1A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="18" cy="52" rx="14" ry="8" fill="#2D9B1F" opacity="0.82" transform="rotate(-45 18 52)"/>
+  </svg>
+
+  <!-- ════════════════ 封面頁 ════════════════ -->
+  <div id="page-cover" class="page active"
+       style="position:fixed;inset:0;z-index:200;background:#1B4A0A;flex-direction:column;">
+    <!-- 全屏背景圖，不受 430px 限制 -->
+    <div style="position:absolute;inset:0;overflow:hidden;">
+      <img src="assets/cover.png" alt="揭曉！你是哪隻阿牛？"
+           style="width:100%;height:100%;object-fit:cover;object-position:center 30%;">
+    </div>
+    <!-- 頂部遮罩（讓 logo 清晰可見） -->
+    <div style="position:absolute;top:0;left:0;right:0;height:110px;
+                background:linear-gradient(to bottom,rgba(12,34,6,0.62) 0%,transparent 100%);
+                pointer-events:none;"></div>
+    <!-- 底部漸層遮罩（僅最底部，不蓋到動物） -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:120px;
+                background:linear-gradient(to bottom,transparent 0%,rgba(14,40,4,0.82) 60%,rgba(14,40,4,0.96) 100%);
+                pointer-events:none;"></div>
+    <!-- Logo + 標題（上方） -->
+    <div style="position:absolute;top:52px;left:0;right:0;display:flex;flex-direction:column;align-items:center;z-index:10;padding:0 32px;">
+      <img src="assets/logo.png" alt="鉅亨買基金"
+           style="height:56px;object-fit:contain;margin-bottom:20px;">
+      <h1 style="color:#2B1A00;font-family:'Noto Serif TC',serif;font-size:40px;font-weight:900;
+                 text-align:center;line-height:1.5;letter-spacing:4px;margin-bottom:8px;
+                 text-shadow:0 1px 4px rgba(255,255,255,0.5);">
+        發現你的投資阿牛原型
+      </h1>
+      <p style="color:rgba(50,30,0,0.7);font-size:20px;letter-spacing:1px;text-align:center;">
+        10 道生活題 · 約 1.5 分鐘 · 純娛樂性質
+      </p>
+    </div>
+    <!-- 按鈕區（下方） -->
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 32px 120px;
+                display:flex;flex-direction:column;align-items:center;z-index:10;">
+      <button class="cover-start-btn" onclick="startQuiz()" style="max-width:300px;width:100%;">
+        開啟你的投資探險 →
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════════ 題目頁 ════════════════ -->
+  <div id="page-question" class="page">
+    <div class="jungle-bg"></div>
+    <div class="sun-glow"></div>
+    <div class="jungle-ground"></div>
+    <svg class="deco-bl" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;bottom:50px;left:-5px;width:88px;z-index:3;opacity:0.9;">
+      <path d="M10 105 C10 105 0 62 20 32 C25 23 30 19 32 21 C32 21 25 52 30 82 C33 92 10 105 10 105Z" fill="#2A8A1A"/>
+      <path d="M30 105 C30 105 22 58 40 28 C46 17 52 13 54 15 C54 15 46 50 50 78 C52 88 30 105 30 105Z" fill="#34A020"/>
+      <path d="M54 105 C54 105 50 65 64 40 C68 32 73 28 75 30 C75 30 69 60 71 82 C72 92 54 105 54 105Z" fill="#2A8A1A"/>
+      <path d="M72 105 C72 105 70 73 80 55 C83 48 87 45 89 47 C89 47 84 68 85 84 C86 93 72 105 72 105Z" fill="#1E7014"/>
+    </svg>
+    <svg class="deco-br" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;bottom:45px;right:-5px;width:82px;z-index:3;opacity:0.9;transform:scaleX(-1);">
+      <path d="M10 105 C10 105 0 62 20 32 C25 23 30 19 32 21 C32 21 25 52 30 82 C33 92 10 105 10 105Z" fill="#2A8A1A"/>
+      <path d="M30 105 C30 105 22 58 40 28 C46 17 52 13 54 15 C54 15 46 50 50 78 C52 88 30 105 30 105Z" fill="#34A020"/>
+      <path d="M54 105 C54 105 50 65 64 40 C68 32 73 28 75 30 C75 30 69 60 71 82 C72 92 54 105 54 105Z" fill="#2A8A1A"/>
+    </svg>
+
+    <div class="top-bar">
+      <button id="btn-prev" class="btn-prev" onclick="prevQuestion()" style="visibility:hidden;">← 上一題</button>
+      <div class="progress-wrap">
+        <div class="progress-track">
+          <div id="progress-fill" class="progress-fill" style="width:10%;"></div>
+        </div>
+        <div id="progress-text" class="progress-label">1 / 10</div>
+      </div>
+    </div>
+    <div id="question-container" class="question-section"></div>
+  </div>
+
+  <!-- ════════════════ 計算頁 ════════════════ -->
+  <div id="page-calculating" class="page" style="position:relative;align-items:center;justify-content:center;">
+    <div class="jungle-bg"></div>
+    <div class="sun-glow"></div>
+    <div class="jungle-ground"></div>
+    <div class="calc-content">
+      <img src="assets/阿牛Walk AI原檔750X750.gif" alt="阿牛" class="calc-aniu" style="animation:none;">
+      <h2 class="calc-title">阿牛正在找最適合你的動物裝...</h2>
+      <div id="calc-text" class="calc-sub">分析你的投資座標中...</div>
+      <div class="calc-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ 結果頁 ════════════════ -->
+  <div id="page-result" class="page" style="overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div id="result-container"></div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA — Questions
+// ═══════════════════════════════════════════════════════
+const QUESTIONS = [
+  {
+    q: '朋友來你家想一起耗個下午，選片任務落在你身上，你會？',
+    emoji: '🎬',
+    options: [
+      { text: '查 Google 評論和評分，挑口碑最好的那部', icon: '⭐', dx: 2, dy: 0 },
+      { text: '問問大家想看什麼類型，再幫大家挑一部', icon: '👥', dx: 0, dy: 1 },
+      { text: '直接讓 Netflix 算法推薦，它懂的比我多', icon: '🤖', dx: -2, dy: -1 },
+      { text: '選一部以前大家都說不錯但自己沒看的', icon: '🍿', dx: -1, dy: -1 },
+    ]
+  },
+  {
+    q: '颱風預報說週末可能直撲，你期待已久的露營計畫被迫取消，你第一個反應是？',
+    emoji: '⛺',
+    options: [
+      { text: '查颱風路徑預測，評估實際風險再決定要不要去', icon: '🌀', dx: 2, dy: 1 },
+      { text: '難得颱風假，立刻改成室內攀岩或密室！', icon: '🎉', dx: 0, dy: 2 },
+      { text: '穩穩備好物資，在家等颱風過，反正不急', icon: '🏠', dx: -1, dy: -1 },
+      { text: '取消就取消，安全第一，不必強求', icon: '☂️', dx: -2, dy: -2 },
+    ]
+  },
+  {
+    q: '你跟朋友合資的飲料店最近業績突然下滑，你第一個想到的是？',
+    emoji: '🧋',
+    options: [
+      { text: '整理一週的銷售數據，找出哪個品項、哪個時段出了問題', icon: '📊', dx: 2, dy: 0 },
+      { text: '召集大家開緊急會議，一起腦力激盪翻轉方案', icon: '💪', dx: 0, dy: 2 },
+      { text: '先觀察一個月，也許只是季節性波動', icon: '🧘', dx: -1, dy: -1 },
+      { text: '快速試幾個新口味、新促銷，看哪個有效', icon: '⚡', dx: 1, dy: 2 },
+    ]
+  },
+  {
+    q: '年終獎金入帳了！這筆意外之財你最想怎麼運用？',
+    emoji: '💰',
+    options: [
+      { text: '仔細研究投資機會，找一個值得重押的標的', icon: '🔍', dx: 2, dy: 1 },
+      { text: '交給專業投資組合，讓研究團隊幫我衝', icon: '🏆', dx: -1, dy: 2 },
+      { text: '設定好讓它自動循環，錢滾錢不用我操心', icon: '🔄', dx: -2, dy: 0 },
+      { text: '先放定存，慢慢等機會，不急著動', icon: '🐢', dx: -1, dy: -2 },
+    ]
+  },
+  {
+    q: '第一次去一間評價超好的餐廳，菜單上全是沒吃過的料理，你會？',
+    emoji: '🍽️',
+    options: [
+      { text: '仔細研究每道菜的食材跟網路評論，挑 CP 值最高的', icon: '🔬', dx: 2, dy: 0 },
+      { text: '直接點最貴的招牌菜，來都來了就吃最好的', icon: '🥩', dx: 0, dy: 2 },
+      { text: '選看起來比較熟悉的食材，不踩雷最重要', icon: '🍜', dx: 0, dy: -2 },
+      { text: '什麼都沒吃過就點什麼，試新的最刺激', icon: '🍣', dx: 1, dy: 2 },
+    ]
+  },
+  {
+    q: '投資後，你大概多久會去看一次帳戶和績效？',
+    emoji: '📱',
+    options: [
+      { text: '每天都看，掌握最新動態是基本的', icon: '📱', dx: 2, dy: 1 },
+      { text: '每週看一次，保持節奏但不用天天盯', icon: '📅', dx: 1, dy: 1 },
+      { text: '大概一個月看一次，長期投資不需要頻繁看', icon: '📆', dx: -1, dy: -1 },
+      { text: '設定好就幾乎不看，反正它自動在運作', icon: '💤', dx: -2, dy: 0 },
+    ]
+  },
+  {
+    q: '朋友傳來一個連結說「這個基金最近很猛！」你的第一反應是？',
+    emoji: '📲',
+    options: [
+      { text: '自己查過去績效和持股明細，研究完再決定', icon: '🔬', dx: 2, dy: 0 },
+      { text: '猛？有沒有更猛的？直接問他有沒有更好的選項', icon: '🚀', dx: 0, dy: 2 },
+      { text: '看起來穩就先小額試試，反正試試又不會怎樣', icon: '🌱', dx: 0, dy: -2 },
+      { text: '直接下單！朋友說猛就是猛，晚了怕錯過', icon: '⏰', dx: 1, dy: 2 },
+    ]
+  },
+  {
+    q: '玩大富翁時，你的策略通常是？',
+    emoji: '🎲',
+    options: [
+      { text: '計算每塊地的投報率，精準出手買最值錢的位置', icon: '🧮', dx: 2, dy: 1 },
+      { text: '盡量買下整排，壟斷才是王道', icon: '👑', dx: 0, dy: 2 },
+      { text: '穩穩收租金，不跟人搶高風險的地', icon: '🏠', dx: -1, dy: -1 },
+      { text: '看準時機一次梭哈，搏翻盤', icon: '🎰', dx: 1, dy: 2 },
+    ]
+  },
+  {
+    q: '計畫去一個從沒去過的城市玩五天，行程你怎麼安排？',
+    emoji: '✈️',
+    options: [
+      { text: '做詳細攻略，精確到每個景點的開放時間和交通路線', icon: '📋', dx: 2, dy: 0 },
+      { text: '先訂好大飯店跟幾個必去景點，其他讓當地導遊帶路', icon: '🗺️', dx: -1, dy: 1 },
+      { text: '跟團最省事，全部交給旅行社安排', icon: '🚌', dx: -2, dy: -1 },
+      { text: '完全不排，哪裡看起來有趣就去哪', icon: '🎒', dx: 1, dy: 2 },
+    ]
+  },
+  {
+    q: '你覺得最理想的投資狀態是哪一種？',
+    emoji: '💭',
+    options: [
+      { text: '自己掌握所有細節，每一筆進出都在我計算中', icon: '📊', dx: 2, dy: 1 },
+      { text: '選好強勢的方向，剩下的交給專家去衝', icon: '🦁', dx: -1, dy: 2 },
+      { text: '設定好讓錢自動在各個環節間循環增值', icon: '🔄', dx: -2, dy: 0 },
+      { text: '穩穩地每個月存入，用時間慢慢累積', icon: '🐢', dx: -1, dy: -1 },
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+//  DATA — Animals
+// ═══════════════════════════════════════════════════════
+const ANIMALS = [
+  {
+    id: 'owl',
+    img: 'assets/牛頭鷹.png',
+    powerImg: 'assets/夜視量化分析.png',
+    emoji: '🦉', name: '牛頭鷹', series: '貓頭鷹系',
+    tx: 18, ty: 6,
+    color: '#3EC2CF', bgColor: '#E8F9FB',
+    quote: '先觀其形，後定其策。',
+    desc: '你就像一隻視野高遠的貓頭鷹——冷靜、敏銳、擅長在資訊迷霧中找到關鍵指標。你不會衝動行事，而是習慣用數據和邏輯做出判斷，在別人慌張時保持理性。',
+    power: '夜視量化分析', powerDesc: '在資訊霧中，你能瞬間剖析指標，大數據全在你掌心。',
+    style: '單筆 + 定期定額', styleIcon: '🔬',
+    tags: ['智慧', '敏銳', '遠見', '冷靜', '策略', '洞察'],
+    mainProduct: '自由 Pay',
+    mainProductDesc: '你擅長分析與策略規劃，自由 Pay 讓你自訂提領比例與時機，像排行程一樣精準掌控現金流。依比例或依金額，由你決定。',
+    mainProductTagline: '你的數據腦 + 自由 Pay 的彈性調整 = 完美搭配',
+    compat: { best: ['raccoon', '浣熊牛'], partner: ['elephant', '大象牛'], pal: ['lion', '阿牛獅'] },
+    isRare: false,
+  },
+  {
+    id: 'lion',
+    img: 'assets/阿牛獅.png',
+    powerImg: 'assets/王者震撼波.png',
+    emoji: '🦁', name: '阿牛獅', series: '獅子系',
+    tx: -4, ty: 17,
+    color: '#F04D29', bgColor: '#FFF0EC',
+    quote: '不搏一把，何以稱王？',
+    desc: '你天生具有領袖氣質，投資風格大膽果決。你相信強大的研究團隊，讓專家選好投組，自己只管把握機會大膽進場。當別人猶豫不決時，你已經全軍出擊。',
+    power: '王者震撼波', powerDesc: '一旦你下單，市場就像聽到咆哮，波動都為你起舞。',
+    style: '單筆申購', styleIcon: '👑',
+    tags: ['霸氣', '勇敢', '自信', '果斷', '領導', '冒險'],
+    mainProduct: '強勢王',
+    mainProductDesc: '你夠大膽，你需要的是更強的武器。強勢王由投研團隊精選強勢投組，單筆 + 月月扣 + 強勢超底三管齊下，讓你每次進場都是重點布局。',
+    mainProductTagline: '王者不自己選基金——王者選最強的團隊',
+    compat: { best: ['cheetah', '衝豹牛'], partner: ['owl', '牛頭鷹'], pal: ['raccoon', '浣熊牛'] },
+    isRare: false,
+  },
+  {
+    id: 'elephant',
+    img: 'assets/大象牛.png',
+    powerImg: 'assets/大地吸附場.png',
+    emoji: '🐘', name: '大象牛', series: '大象系',
+    tx: -5, ty: -8,
+    color: '#6B7280', bgColor: '#F3F4F6',
+    quote: '穩紮穩打，方能萬里長行。',
+    desc: '你是投資世界中的長跑選手——穩健、有耐心，深信複利的力量。短期波動不會動搖你，因為你看的是五年、十年後的風景。',
+    power: '大地吸附場', powerDesc: '你的資金像大象腳步般「紮根」，不受短期波動影響，年年向上。',
+    style: '定期定額', styleIcon: '🌱',
+    tags: ['穩重', '耐心', '踏實', '信賴', '守秩序', '和善'],
+    mainProduct: '超底王',
+    mainProductDesc: '你本來就在定期定額，超底王讓你在原有節奏上多一層保護——跌了自動加碼，不用改變習慣就能攤低成本，穩中帶進。',
+    mainProductTagline: '定期定額的自然進化版，為你量身打造',
+    compat: { best: ['raccoon', '浣熊牛'], partner: ['owl', '牛頭鷹'], pal: ['cheetah', '衝豹牛'] },
+    isRare: false,
+  },
+  {
+    id: 'cheetah',
+    img: 'assets/衝豹牛.png',
+    powerImg: 'assets/閃電打單.png',
+    emoji: '🐆', name: '衝豹牛', series: '獵豹系',
+    tx: 7, ty: 17,
+    color: '#FAA634', bgColor: '#FFF8ED',
+    quote: '只要點到，就要打到。',
+    desc: '你就像草原上的獵豹——機敏、果斷、速度至上。你不喜歡拖泥帶水，看準機會就立刻出手。比起自己盯盤，你更欣賞「比你更快出手」的工具。',
+    power: '閃電打單', powerDesc: '在市場狙擊點，系統比你的手更快，一秒完成下單到執行。',
+    style: '單筆申購', styleIcon: '⚡',
+    tags: ['快速', '果斷', '勇敢', '精明', '靈活', '動態'],
+    mainProduct: '超底王',
+    mainProductDesc: '你最怕錯過時機，超底王幫你盯盤——設好小跌、大跌兩段觸發門檻，跌到位時自動秒速出手，比你親自守在螢幕前更快更準。',
+    mainProductTagline: '兩段式跌幅觸發，永遠比你的手指更快',
+    compat: { best: ['owl', '牛頭鷹'], partner: ['lion', '阿牛獅'], pal: ['elephant', '大象牛'] },
+    isRare: false,
+  },
+  {
+    id: 'bee',
+    img: 'assets/蜜蜂牛.png',
+    powerImg: 'assets/複利循環巢.png',
+    emoji: '🐝', name: '蜜蜂牛', series: '蜜蜂系',
+    tx: -16, ty: 0,
+    color: '#F59E0B', bgColor: '#FFFBEB',
+    quote: '讓錢幫錢賺錢，才是真正的自由。',
+    desc: '你就像辛勤卻聰明的蜜蜂——不只是努力存錢，而是建立一套讓資產自動循環運轉的系統。停利、轉入、再成長，你相信只要機制設計對了，錢就會自己找到出路。',
+    power: '複利循環巢', powerDesc: '你設計的投資系統就像蜂巢，每一個蜂房都在為下一個創造收益，資產在循環中自動增長。',
+    style: '母子基金循環', styleIcon: '🍯',
+    tags: ['耐心', '系統化', '複利思維', '精準設計', '長線布局', '自動化'],
+    mainProduct: '鉅寶盆',
+    mainProductDesc: '你懂得讓系統幫你工作。鉅寶盆的母子基金循環機制——母基金穩健打底，定期自動轉入子基金追成長，達停利後自動轉回，周而復始，複利不間斷。',
+    mainProductTagline: '設定一次，讓錢幫你自動釀蜜',
+    compat: { best: ['owl', '牛頭鷹'], partner: ['elephant', '大象牛'], pal: ['cheetah', '衝豹牛'] },
+    isRare: false,
+  },
+  {
+    id: 'raccoon',
+    img: 'assets/浣熊牛.png',
+    powerImg: 'assets/夜行全息偵測.png',
+    emoji: '🦝', name: '浣熊牛', series: '浣熊系',
+    tx: -16, ty: -16,
+    color: '#8B5CF6', bgColor: '#F5F3FF',
+    quote: '不以速率取勝，以恆常致富。',
+    desc: '你是低調的夜行者，善於在安靜中穩穩前進。你不追求暴利，永遠把安全放第一，讓系統自動幫你默默累積，時間是你最好的朋友。',
+    power: '夜行全息偵測', powerDesc: '在市場最安靜的時刻，你已悄悄布好局，讓複利在無聲中發酵。',
+    style: '定期定額', styleIcon: '🌙',
+    tags: ['謹慎', '穩健', '低調', '機智', '節儉', '可靠'],
+    mainProduct: '定期定額',
+    mainProductDesc: '你是投資世界的穩健派。定期定額讓你每個月自動存入，不需要擇時、不需要盯盤，用時間和紀律慢慢累積屬於你的資產。',
+    mainProductTagline: '最簡單的投資方式，也是最不容易出錯的',
+    compat: { best: ['elephant', '大象牛'], partner: ['bee', '蜜蜂牛'], pal: ['lion', '阿牛獅'] },
+    isRare: true,
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function getAnimalById(id) { return ANIMALS.find(a => a.id === id); }
+
+function renderAnimalCircle(a, size, extraStyle) {
+  const s = size || 180;
+  const shadowFilter = a.isRare
+    ? `drop-shadow(0 0 22px ${a.color}) drop-shadow(0 10px 28px rgba(0,0,0,0.45))`
+    : `drop-shadow(0 10px 28px rgba(0,0,0,0.45))`;
+  if (a.img) {
+    return `<img src="${a.img}" alt="${a.name}" style="width:${s}px;height:${s}px;object-fit:contain;filter:${shadowFilter};margin-bottom:8px;${extraStyle||''}">`;
+  }
+  return `<div style="font-size:${Math.round(s*0.52)}px;line-height:1;margin-bottom:8px;filter:${shadowFilter};">${a.emoji}</div>`;
+}
+
+function renderSubCircle(a) {
+  if (a.img) {
+    return `<img src="${a.img}" style="width:56px;height:56px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.22));">`;
+  }
+  return `<span style="font-size:34px;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));">${a.emoji}</span>`;
+}
+
+function renderCompatCircle(id) {
+  const a = getAnimalById(id);
+  if (!a) return '';
+  if (a.img) {
+    return `<img src="${a.img}" style="width:52px;height:52px;object-fit:contain;display:block;margin:0 auto 5px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));">`;
+  }
+  return `<div style="font-size:28px;text-align:center;margin-bottom:5px;">${a.emoji}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let currentQ = 0;
+let answers = new Array(10).fill(null);
+let pos = { x: 0, y: 0 };
+
+// ═══════════════════════════════════════════════════════
+//  PAGES
+// ═══════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + id);
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUIZ FLOW
+// ═══════════════════════════════════════════════════════
+function startQuiz() {
+  currentQ = 0;
+  answers = new Array(10).fill(null);
+  pos = { x: 0, y: 0 };
+  showPage('question');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  document.getElementById('btn-prev').style.visibility = currentQ > 0 ? 'visible' : 'hidden';
+  document.getElementById('progress-fill').style.width = Math.round((currentQ + 1) / 10 * 100) + '%';
+  document.getElementById('progress-text').textContent = (currentQ + 1) + ' / 10';
+
+  document.getElementById('question-container').innerHTML = `
+    <div class="fade-up">
+      <div class="question-card">
+        <div class="question-num-badge">第 ${currentQ + 1} 題</div>
+        <span class="question-emoji-display">${q.emoji}</span>
+        <p class="question-text-display">${q.q}</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+        ${q.options.map((opt, i) => `
+          <div class="option-card ${answers[currentQ] === i ? 'selected' : ''}"
+               onclick="selectOption(${i})">
+            <div class="option-icon-box">${opt.icon}</div>
+            <span class="option-text-label">${opt.text}</span>
+            <div class="option-check">✓</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function selectOption(i) {
+  if (answers[currentQ] !== null) {
+    const prev = QUESTIONS[currentQ].options[answers[currentQ]];
+    pos.x -= prev.dx; pos.y -= prev.dy;
+  }
+  answers[currentQ] = i;
+  const opt = QUESTIONS[currentQ].options[i];
+  pos.x += opt.dx; pos.y += opt.dy;
+
+  document.querySelectorAll('.option-card').forEach((c, idx) => c.classList.toggle('selected', idx === i));
+
+  setTimeout(() => {
+    if (currentQ < 9) { currentQ++; renderQuestion(); }
+    else { showCalculating(); }
+  }, 380);
+}
+
+function prevQuestion() {
+  if (currentQ > 0) {
+    if (answers[currentQ] !== null) {
+      const opt = QUESTIONS[currentQ].options[answers[currentQ]];
+      pos.x -= opt.dx; pos.y -= opt.dy;
+      answers[currentQ] = null;
+    }
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALCULATING
+// ═══════════════════════════════════════════════════════
+const CALC_TEXTS = ['分析你的投資座標中...', '比對風險偏好...', '測量主動程度...', '就快揭曉了！✨'];
+
+function showCalculating() {
+  showPage('calculating');
+  const textEl = document.getElementById('calc-text');
+  textEl.textContent = CALC_TEXTS[0];
+  let i = 0;
+  const iv = setInterval(() => { i++; if (i < CALC_TEXTS.length) textEl.textContent = CALC_TEXTS[i]; }, 600);
+  setTimeout(() => { clearInterval(iv); showResult(); }, 2500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  RESULT
+// ═══════════════════════════════════════════════════════
+function euclidean(a) { return Math.sqrt((pos.x - a.tx) ** 2 + (pos.y - a.ty) ** 2); }
+
+function showResult() {
+  const sorted = [...ANIMALS].sort((a, b) => {
+    const da = euclidean(a), db = euclidean(b);
+    if (Math.abs(da - db) < 0.001) return b.ty - a.ty;
+    return da - db;
+  });
+  const p = sorted[0], s = sorted[1];
+  document.getElementById('result-container').innerHTML = buildResult(p, s);
+  showPage('result');
+  document.getElementById('page-result').scrollTop = 0;
+  setTimeout(() => { p.isRare ? fireRareConfetti() : fireConfetti(); }, 500);
+}
+
+function buildResult(p, s) {
+  const mainCircle = renderAnimalCircle(p);
+  // rare 結果直接用 glow filter（已在 renderAnimalCircle 裡處理），不加圓框
+  const heroAnimal = mainCircle;
+
+  const powerIcon = p.powerImg
+    ? `<img src="${p.powerImg}" class="power-icon-img" alt="${p.power}">`
+    : `<span class="power-icon-emoji">${p.styleIcon || '✨'}</span>`;
+
+  const subCircleHtml = renderSubCircle(s);
+
+  return `
+    <!-- Hero 背景區 -->
+    <div style="position:relative;background:linear-gradient(180deg,#FEF5E4 0%,#C8E8F5 18%,#A8D8A8 36%,#5A9E3A 54%,#2F6B1A 72%,#1A4A0A 100%);padding-bottom:40px;">
+      <div style="position:absolute;top:15px;left:50%;transform:translateX(-50%);width:240px;height:240px;background:radial-gradient(circle,rgba(255,220,100,0.28) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
+
+      ${p.isRare ? `<div style="text-align:center;padding-top:24px;"><span class="rare-badge">✨ 稀有結果！全球限定</span></div>` : ''}
+
+      <div class="result-hero" style="${p.isRare ? '' : 'padding-top:32px;'}">
+        ${heroAnimal}
+        <div class="result-series" style="color:${p.color};">${p.series}</div>
+        <div class="result-name">你是 ${p.name}！</div>
+        <div class="result-quote-box" style="border-color:rgba(255,248,220,0.5);">
+          <p class="result-quote-text">「${p.quote}」</p>
+        </div>
+      </div>
+
+      <!-- 草地裝飾 -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(180deg,transparent 0%,#2A6B14 40%,#1E5210 80%,#3D2008 100%);border-radius:60% 60% 0 0/20% 20% 0 0;"></div>
+    </div>
+
+    <!-- 白色內容區 -->
+    <div class="result-content">
+
+      <!-- 描述 -->
+      <div class="desc-card">
+        <p class="desc-text">${p.desc}</p>
+      </div>
+
+      <!-- 超能力 -->
+      <div class="power-card" style="background:${p.color};">
+        ${powerIcon}
+        <div>
+          <div class="power-label">投資超能力</div>
+          <div class="power-name">${p.power}</div>
+          <div class="power-desc">${p.powerDesc}</div>
+        </div>
+      </div>
+
+      <!-- 投資方式 -->
+      <div class="style-card" style="background:${s.bgColor};border-color:${s.color};margin-bottom:14px;">
+        <span class="style-icon">${p.styleIcon || '🎯'}</span>
+        <div>
+          <div class="style-label" style="color:${s.color};">適合的投資方式</div>
+          <div class="style-name" style="color:${p.color};">${p.style}</div>
+          <div class="style-sub" style="color:#6B7280;">最能發揮你的優勢</div>
+        </div>
+      </div>
+
+      <!-- 副屬性 -->
+      <div class="sub-card">
+        ${subCircleHtml}
+        <div>
+          <div style="font-size:11px;color:#9CA3AF;margin-bottom:2px;">你同時帶有一點</div>
+          <div style="font-size:15px;font-weight:700;color:#1F2937;">${s.name} 的特質</div>
+          <div style="font-size:11px;color:#9CA3AF;margin-top:2px;font-style:italic;">「${s.quote}」</div>
+        </div>
+      </div>
+
+      <!-- 標籤 -->
+      <div class="tags-section">
+        <div class="section-label">性格標籤</div>
+        <div>
+          ${p.tags.map(t => `<span class="tag-pill" style="color:${p.color};border-color:${p.color};background:${p.bgColor};">${t}</span>`).join('')}
+        </div>
+      </div>
+
+      <!-- 主推產品 -->
+      <div class="section-label">主推產品</div>
+      <div class="product-main" style="background:${p.bgColor};border-color:${p.color};margin-bottom:10px;">
+        <div style="display:flex;align-items:center;margin-bottom:8px;">
+          <span class="product-tag" style="background:${p.color};">${p.mainProduct}</span>
+          <span class="product-anue-label">鉅亨買基金</span>
+        </div>
+        <p class="product-desc">${p.mainProductDesc}</p>
+        <p class="product-tagline" style="color:${p.color};">✦ ${p.mainProductTagline}</p>
+      </div>
+
+      <!-- 相性 -->
+      <div class="section-label">投資動物相性</div>
+      <div class="compat-row">
+        ${[
+          { label: '最佳戰友', key: 'best' },
+          { label: '最佳搭檔', key: 'partner' },
+          { label: '最佳旅伴', key: 'pal' },
+        ].map(c => {
+          const [cId, cName] = p.compat[c.key];
+          const ca = getAnimalById(cId);
+          return `
+            <div class="compat-card">
+              <div style="font-size:10px;color:#9CA3AF;margin-bottom:5px;">${c.label}</div>
+              ${renderCompatCircle(cId)}
+              <div style="font-size:12px;font-weight:700;color:#374151;">${cName}</div>
+            </div>`;
+        }).join('')}
+      </div>
+
+      <!-- 操作 -->
+      <button class="action-btn-primary" onclick="startQuiz()">再探索一次 →</button>
+      <button class="action-btn-secondary" onclick="shareResult('${p.name}', '${p.quote.replace(/'/g,"&#39;")}')">分享我的結果</button>
+
+    </div>
+  `;
+}
+
+function shareResult(name, quote) {
+  const text = `我是投資動物「${name}」！\n「${quote}」\n#鉅亨投資動物 你是哪種阿牛？`;
+  if (navigator.share) {
+    navigator.share({ title: '揭曉！你是哪隻阿牛？', text });
+  } else {
+    navigator.clipboard?.writeText(text)
+      .then(() => alert('文字已複製，可貼到任何地方分享！'))
+      .catch(() => alert(text));
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════════
+function fireConfetti() {
+  confetti({ particleCount: 140, spread: 80, origin: { y: 0.3 }, colors: ['#F0A500', '#FFD54F', '#87CEAB', '#F04D29', '#ffffff'] });
+}
+function fireRareConfetti() {
+  const end = Date.now() + 3000;
+  (function frame() {
+    confetti({ particleCount: 18, spread: 90, origin: { x: Math.random(), y: Math.random() * 0.5 }, colors: ['#a855f7','#ec4899','#f59e0b','#ffffff','#3EC2CF'], shapes: ['star'] });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+</script>
+</body>
+</html>
